@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="/favicon.ico" type="image/x-icon">
+	<title>D3</title>
+
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto+Slab" rel="stylesheet">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/main.css" rel="stylesheet">
+	<link href="css/fonts.css" rel="stylesheet">
+	<style>
+			.node {
+			    fill: #ccc;
+			    stroke: #fff;
+			    stroke-width: 2px;
+			}
+
+			.link {
+					stroke: #999;
+					stroke-opacity: 0.6;
+			}
+    </style>
+</head>
+<body>
+
+	<div class="container">
+
+		<div class="header">
+			<div class="row">
+				<div class="col-xs-10">
+					<h2>Force layout</h2>
+				</div>
+			</div>
+		</div>
+		<ol class="breadcrumb">
+			<li><a href="networks1.html">1</a></li>
+			<li><a href="networks2.html">2</a></li>
+			<li><a href="networks3.html">3</a></li>
+			<li><a href="networks4.html">4</a></li>
+		</ol>
+		<header>
+			<h1>Les Miserábles</h1>
+		</header>
+
+		<div id="chart"></div>
+
+		<div class="section">
+			<h3>O que</h3>
+			<div class="row">
+				<div class="col-md-8">
+				<p>Esse é um exemplo mais interessante, com os personagens do livro Os Miseráveis ligados pela co-ocorrência em capítulos.
+				<p>O personagem principal é Valjean. Que nó você adivinharia que é ele? Hover funciona.</p>
+				<p>Aqui o principal é entender como diferentes forças (no sentido físico) cooperam para definir o leiaute dos nós e links. Nesse exemplo, são 3: uma que faz os links terem um certo tamanho, uma que afasta ou aproxima nós uns dos outros, e outra que direciona todos os nós para o centro do svg.</p>
+				<p>Mexa nas forças para entendê-las. Os parâmetros para mexer são muito bem explicados <a href="http://www.puzzlr.org/force-graphs-with-d3/" target="_blank">aqui. <span class="icon-link-external"></span></a></p>
+				<p>Melhor ainda, você pode experimentar fácil com os parâmetros também <a href="https://bl.ocks.org/steveharoz/8c3e2524079a8c440df60c1ab72b5d03" target="_blank">aqui. <span class="icon-link-external"></span></a></p>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<footer></footer>
+
+	<!-- scripts -->
+	<script src="js/d3.v4.min.js"></script>
+	<script>
+		var
+		    width = 1000,
+		    height = 500;
+
+		var svg = d3.select("#chart")
+				.append("svg")
+				.attr('version', '1.1')
+				.attr('viewBox', '0 0 '+width+' '+height)
+				.attr('width', '100%');
+
+		var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+		var simulation = d3.forceSimulation()
+		    .force("link", d3.forceLink().id(function(d) { return d.id; }))
+		    .force("charge", d3.forceManyBody())
+		    .force("center", d3.forceCenter(width / 2, height / 2));
+
+		d3.json("miserables.json", function(error, graph) {
+		  if (error) throw error;
+
+			console.dir(graph.links);
+			console.dir(graph.nodes);
+
+		  var link = svg.append("g")
+		      .attr("class", "link")
+		    .selectAll("line")
+		    	.data(graph.links)
+		    .enter().append("line");
+
+		  var node = svg.append("g")
+		      .attr("class", "nodes")
+		    .selectAll("circle")
+		    	.data(graph.nodes)
+		    .enter().append("circle")
+		      .attr("r", 5)
+		      .attr("fill", function(d) { return color(d.group); })
+		      .call(d3.drag()
+		          .on("start", dragstarted)
+		          .on("drag", dragged)
+		          .on("end", dragended));
+
+		  node.append("title")
+		      .text(function(d) { return d.id; });
+
+		  simulation
+		      .nodes(graph.nodes)
+		      .on("tick", ticked);
+
+		  simulation.force("link")
+		      .links(graph.links);
+
+		  function ticked() {
+		    link
+		        .attr("x1", function(d) { return d.source.x; })
+		        .attr("y1", function(d) { return d.source.y; })
+		        .attr("x2", function(d) { return d.target.x; })
+		        .attr("y2", function(d) { return d.target.y; });
+
+		    node
+		        .attr("cx", function(d) { return d.x; })
+		        .attr("cy", function(d) { return d.y; });
+		  }
+		});
+
+		function dragstarted(d) {
+		  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+		  d.fx = d.x;
+		  d.fy = d.y;
+		}
+
+		function dragged(d) {
+		  d.fx = d3.event.x;
+		  d.fy = d3.event.y;
+		}
+
+		function dragended(d) {
+		  if (!d3.event.active) simulation.alphaTarget(0);
+		  d.fx = null;
+		  d.fy = null;
+		}
+
+</script>
+
+</body>
+</html>
